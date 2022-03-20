@@ -1,9 +1,9 @@
 /*********************************************************** */
+const N = 9;
 
 let valuation = new Array(N * N * N).fill(0);
 let clauses = [];
 
-const N = 9;
 
 function sudokuProp(i, j, k) {
     return (i - 1) * N * N + (j - 1) * N + (k - 1);
