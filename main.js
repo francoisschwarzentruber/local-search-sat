@@ -33,17 +33,30 @@ function sudokuAddClauses() {
                         clauses.push([-sudokuProp(j2, i, k), -sudokuProp(j, i, k)]);
                     }
 
+    /*  const grid = [
+          [3, 0, 6, 5, 0, 8, 4, 0, 0],
+          [5, 2, 0, 0, 0, 0, 0, 0, 0],
+          [0, 8, 7, 0, 0, 0, 0, 3, 1],
+          [0, 0, 3, 0, 1, 0, 0, 8, 0],
+          [9, 0, 0, 8, 6, 3, 0, 0, 5],
+          [0, 5, 0, 0, 9, 0, 6, 0, 0],
+          [1, 3, 0, 0, 0, 0, 2, 5, 0],
+          [0, 0, 0, 0, 0, 0, 0, 7, 4],
+          [0, 0, 5, 2, 0, 6, 3, 0, 0]
+      ];*/
+
     const grid = [
-        [3, 0, 6, 5, 0, 8, 4, 0, 0],
-        [5, 2, 0, 0, 0, 0, 0, 0, 0],
+        [3, 0, 6, 5, 0, 8, 4, 0, 2],
+        [5, 2, 0, 0, 3, 0, 7, 0, 0],
         [0, 8, 7, 0, 0, 0, 0, 3, 1],
-        [0, 0, 3, 0, 1, 0, 0, 8, 0],
+        [0, 0, 3, 0, 1, 0, 0, 8, 7],
         [9, 0, 0, 8, 6, 3, 0, 0, 5],
         [0, 5, 0, 0, 9, 0, 6, 0, 0],
-        [1, 3, 0, 0, 0, 0, 2, 5, 0],
-        [0, 0, 0, 0, 0, 0, 0, 7, 4],
-        [0, 0, 5, 2, 0, 6, 3, 0, 0]
+        [1, 3, 0, 9, 0, 0, 2, 5, 0],
+        [0, 9, 0, 0, 5, 0, 0, 7, 4],
+        [7, 0, 5, 2, 0, 6, 3, 0, 9]
     ];
+
 
     /*const grid = [
         [0, 4, 0, 1],
@@ -135,12 +148,18 @@ function walksatstep() {
     }
 
 
-    const goodPoint = (p) = () => {
-        const count = getNbTrueClauses();
+    const countBreak = (p) = () => {
+        const clausesTruth = clauses.map(isClauseTrue);
         valuation[p] = 1 - valuation[p];
-        const count2 = getNbTrueClauses();
+        const clausesTruth2 = clauses.map(isClauseTrue);
         valuation[p] = 1 - valuation[p];
-        return count2 - count;
+
+        let count = 0;
+        for(let j in clauses) {
+            if(clausesTruth[j] > clausesTruth2[j])
+                count++;
+        }
+        return count;
     }
 
     const getNbTrueClausesAfterFlipOf = (p) => () => {
@@ -155,25 +174,26 @@ function walksatstep() {
         return valuation;
 
     const clause = randomUnsatisfiedClause();
+
     const vars = clause.map(Math.abs);
-    const goodvars = vars.filter((p) => goodPoint(p) >= 0);
+    const goodvars = vars.filter((p) => countBreak(p) >= 0);
 
     if (goodvars.length > 0) {
         const p = chooseFromArray(goodvars);
         flip(p);
 
     } else {
-        if (Math.random() < 0.1) {
+        if (Math.random() < 0.5) {
             const p = Math.abs(chooseFromArray(clause));
             flip(p);
         } else {
             const vars = clause.map(Math.abs);
-            const B = vars.map(getNbTrueClausesAfterFlipOf);
-            const bmax = Math.max(...B);
+            const B = vars.map(countBreak);
+            const bmin = Math.min(...B);
 
             const goodvar = [];
             for (let i in B) {
-                if (B[i] == bmax)
+                if (B[i] == bmin)
                     goodvar.push(vars[i]);
             }
 
@@ -184,12 +204,14 @@ function walksatstep() {
 
     }
 
+
+
 }
 
 
 
 
-const tabuDelay = 0;
+const tabuDelay = 20;
 const tabu = new Array(valuation.length).fill(-tabuDelay);
 let t = 0;
 
